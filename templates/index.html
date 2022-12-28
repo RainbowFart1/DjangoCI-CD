@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ch">
+{% load my_tag my_filter %}
+<head>
+    <meta charset="UTF-8">
+    <title>{{ SITE_TITLE }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" sizes="any" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/my/css/reset.css">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="/static/elementui/theme-chalk/index.css">
+
+    <link rel="stylesheet" href="/static/fontawesome-free-5/css/all.min.css">
+    <link rel="stylesheet" href="/static/my/css/base.css">
+    {% block css %}
+        <link rel="stylesheet" href="/static/my/css/index.css">
+    {% endblock %}
+    <link rel="stylesheet" href="/static/my/css/match/notebook.css">
+    <link rel="stylesheet" href="/static/my/css/match/phone.css">
+
+</head>
+<body>
+<div id="app">
+    <link rel="stylesheet" :href="'/static/my/css/theme/' + theme + '.css'">
+    <el-scrollbar ref="scrollbar" style="height: 100vh">
+
+        <!--手机端展示的目录-->
+        <el-drawer
+                style="display: none"
+                custom-class="nav_drawer_class"
+                title="我是标题"
+                :modal="false"
+                :with-header="false"
+                size="40%"
+                @close="nav_close"
+                @open="nav_open"
+                :visible.sync="nav_drawer"
+                direction="ltr">
+            <div class="nav_content">
+                <div class="title">
+                    <img src="/static/my/img/nav/avatar.jpeg" alt="">
+                    <h2>{{ SITE_TITLE }}</h2>
+                </div>
+                <div class="content">
+                    {% dynamic_navigation request %}
+                </div>
+            </div>
+        </el-drawer>
+        <!-- 目录区域 -->
+        <nav class="nav_bg">
+            <div class="left" id="dynamic_nav">
+                {% dynamic_navigation request %}
+                <a @click="nav_drawer=true" class="nav_slide" href="javascript:void(0);"><i
+                        class="fa fa-align-justify"></i></a>
+                {% block search %}
+                    <div class="search">
+                        <input type="text" @keydown.enter="search()" v-model="search_key" class="search_box"
+                               placeholder="搜索你想要的内容">
+                        <button @click="search()"><i class="fa fa-search"></i></button>
+                    </div>
+                {% endblock %}
+            </div>
+            <div class="right">
+                <img v-show="theme === 'light'" src="/static/my/img/nav/light.svg" @click="setTheme('dark')" alt="">
+                <img v-show="theme === 'dark'" src="/static/my/img/nav/dark.svg" @click="setTheme('light')" alt="">
+
+                {% if request.user.is_authenticated %}
+                    <img src="{{ request.user|get_avatar }}" style="border-radius: 50%" class="avatar" alt="">
+                    <el-dropdown @command="handleCommand">
+                        <span class="el-dropdown-link">
+                          {{ request.user.nick_name }}<i class="el-icon-arrow-down el-icon--right"></i>
+                        </span>
+                        <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item command="/backend/">个人中心</el-dropdown-item>
+                            <el-dropdown-item command="/backend/edit_avatar/">修改头像</el-dropdown-item>
+                            {% if request.user.is_superuser %}
+                                <el-dropdown-item command="/backend/add_article/">发布文章</el-dropdown-item>
+                                <el-dropdown-item command="/admin/">后台管理</el-dropdown-item>
+                            {% endif %}
+                            <el-dropdown-item divided command="/logout/">注销退出</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
+                {% else %}
+                    <a href="/login">登录</a>
+{#                    <a href="/sign">注册</a>#}
+                {% endif %}
+            </div>
+        </nav>
+        {% block banner %}
+            {% banner 'index' %}
+        {% endblock %}
+        <!-- 中心区域 -->
+        <main>
+            {% csrf_token %}
+            {% block main %}
+                <!-- 一般来说，下面会有一个main，用于居中对齐 -->
+                <div class="main">
+                    <div class="left">
+                        <div class="boutique_article card">
+                            <div class="title">
+                                <h2>精选文章</h2>
+                                <div class="switch_article_category">
+                                <span :active="this_category === 'qianduan'"
+                                      @click="switch_article_category('qianduan')">前端</span>
+                                    <span :active="this_category === 'houduan'"
+                                          @click="switch_article_category('houduan')">后端</span>
+                                </div>
+                            </div>
+                            <div class="body">
+                                <ul v-show="this_category === 'qianduan'" class="qianduan">
+                                    {% for frontend in frontend_list %}
+                                        <li>
+                                            <div class="left">
+                                                <div>
+                                                    <img src="{{ frontend.cover.url.url }}" alt="">
+                                                </div>
+                                            </div>
+                                            <div class="right">
+                                                <h2><a href="/article/{{ frontend.nid }}/">{{ frontend.title }}</a></h2>
+                                                <p>{{ frontend.abstract }}</p>
+                                                <span>{{ frontend.create_date|date_humaniz }}</span>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+
+
+                                </ul>
+                                <ul v-show="this_category === 'houduan'" class="hou">
+                                    {% for frontend in backend_list %}
+                                        <li>
+                                            <div class="left">
+                                                <div>
+                                                    <img src="{{ frontend.cover.url.url }}" alt="">
+                                                </div>
+                                            </div>
+                                            <div class="right">
+                                                <h2><a href="/article/{{ frontend.nid }}/">{{ frontend.title }}</a></h2>
+                                                <p>{{ frontend.abstract }}</p>
+                                                <span>{{ frontend.create_date|date_humaniz }}</span>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="hotList card">
+                            <div id="con">
+
+                            </div>
+                            <div class="title">
+                                <h2 id="pos">今日热搜</h2>
+                                <div>
+                                    <a href="/news/">查看更多</a>
+                                </div>
+                            </div>
+                            <div class="body">
+                                <div v-for="item in news_list" :key="item.index">
+                                    <span class="index">[[ item.index ]]</span> <a
+                                        :href="item.link"
+                                        target="_blank">[[ item.title ]]</a>
+                                    <span class="num">[[ item.hotValue ]]</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="all_article card">
+                            <div class="title">
+                                <h2>博客文章</h2>
+                            </div>
+                            <div class="body">
+                                {% if request.user.is_superuser %}
+                                    <el-dialog
+                                            title="修改文章封面"
+                                            :visible.sync="edit_cover_dialog"
+                                            width="20%">
+                                        <div class="dialog_content">
+                                            <div>
+                                                <label for="">文章封面</label>
+                                                <el-select v-model="edit_cover.nid"
+                                                           placeholder="请选择文章封面">
+                                                    {% for cover in cover_list %}
+                                                        <el-option
+                                                                label="{{ cover.url.url }}"
+                                                                value="{{ cover.nid }}">
+                                                            <img src="{{ cover.url.url }}"
+                                                                 alt="">
+                                                        </el-option>
+                                                    {% endfor %}
+                                                </el-select>
+                                            </div>
+                                        </div>
+                                        <span slot="footer" class="dialog-footer">
+                                            <el-button @click="edit_cover_dialog = false">取 消</el-button>
+                                            <el-button type="primary"
+                                                       @click="edit_cover_method(edit_cover.aid)">确 定</el-button>
+                                          </span>
+                                    </el-dialog>
+                                {% endif %}
+                                <ul class="article_content">
+                                    {% for article in article_list %}
+                                        <li>
+                                            {% if article.category %}
+                                                <div class="category_flag"
+                                                     len="{{ article.get_category_display|length }}"
+                                                     type="{{ article.get_category_display }}">
+                                                    {{ article.get_category_display }}
+                                                </div>
+                                            {% endif %}
+
+                                            <div class="left">
+                                                <div>
+                                                    <el-image
+                                                            scroll-container=".el-scrollbar__wrap"
+                                                            @contextmenu.ctrl.prevent="show_edit_cover('{{ article.nid }}', '{{ article.cover.nid }}')"
+                                                            src="{{ article.cover.url.url }}" lazy alt="">
+                                                        <div slot="placeholder" class="image-slot">
+                                                            <i class="el-icon-picture-outline"></i>
+                                                        </div>
+                                                        <div slot="error" class="image-slot">
+                                                            <i class="el-icon-picture-outline"></i>
+                                                        </div>
+                                                    </el-image>
+
+                                                </div>
+
+                                            </div>
+                                            <div class="right">
+                                                <h2><a href="/article/{{ article.nid }}/">{{ article.title }}</a></h2>
+                                                <p>{{ article.abstract }}</p>
+                                                <div class="article_info">
+                                                    <span>
+                                                <i class="far fa-clock"></i>{{ article.create_date|date:'Y-m-d' }}
+                                            </span>
+                                                    <span>
+                                                <i class="fas fa-thumbs-up"></i>{{ article.digg_count }}
+                                            </span>
+                                                    <span>
+                                                <i class="far fa-eye"></i>{{ article.look_count }}
+                                            </span>
+                                                    <span class="netbook phone_550">
+                                                <i class="fas fa-comments"></i>{{ article.comment_count }}
+                                            </span>
+                                                    <span class="netbook phone_550">
+                                                        <i class="fas fa-star-half-alt {{ article|is_user_collects:request }}"></i>{{ article.collects_count }}
+                                                    </span>
+                                                    {% if article.pwd %}
+                                                        <span class="netbook phone_550">
+                                                            <i class="fa fa-lock"></i>
+                                                        </span>
+                                                    {% endif %}
+
+                                                </div>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                <ul class="pager">
+                                    {{ pager.page_html|safe }}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="right">
+                        {% if IS_ADVERTIS and advert_list.count %}
+                            <div class="advertisement card">
+                                <div class="title">
+                                    <h2>独家广告</h2>
+                                    <div>
+                                        <a href="#">申请</a>
+                                    </div>
+                                </div>
+                                <div class="body">
+                                    <el-carousel :interval="5000" trigger="click" class="adv_img_list" height="200px">
+                                        {% for advert in advert_list|generate_advert %}
+                                            <el-carousel-item>
+                                                <a title="{{ advert.title }}" href="{{ advert.href }}" target="_blank">
+                                                    <img src="{{ advert.url }}" alt="">
+                                                </a>
+                                            </el-carousel-item>
+                                        {% endfor %}
+
+                                    </el-carousel>
+
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="my_card">
+{#                            <div class="title">#}
+{#                                <h3>个人名片</h3>#}
+{#                                <h4>MY</h4>#}
+{#                                <h4>PROFILE</h4>#}
+{#                                <img src="/static/my/img/footer/wechat.png" alt="我的微信">#}
+{#                            </div>#}
+                            <div class="jieqi">
+                                <img id="jieqiset" src="/static/my/img/24_hourse/0.png" alt="24节气">
+                            </div>
+{#                            <div class="footer">#}
+{#                                <p>NAME <span>{{ SITE_INFO.name }}</span></p>#}
+{#                                <p>JOB <span>{{ SITE_INFO.job }}</span></p>#}
+{#                                <p>ADDR <span>{{ SITE_INFO.address }}</span></p>#}
+{#                                <p>WEB <a target="_blank"#}
+{#                                          href="//{{ SITE_INFO.link }}">{{ SITE_INFO.link }}</a>#}
+{#                                </p>#}
+{#                            </div>#}
+
+                        </div>
+                        <div class="tags card">
+                            <div class="title">
+                                <h2>标签云</h2>
+                            </div>
+                            <div class="body">
+                                <ul>
+                                    {% generate_tag_html %}
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="site_info card">
+                            <div class="title">
+                                <h2>站点信息</h2>
+                            </div>
+                            <div class="body">
+                                <div class="item"><b>建站时间:</b> <span>{{ SITE_INFO.date }}</span></div>
+                                <div class="item"><b>网站程序:</b> <span>Django+Vue.js</span></div>
+                                <div class="item"><b>在线人数:</b> <span>{{ online_count }}</span></div>
+                                <div class="item"><b>前端文章:</b> <span>{% calculation_category_count 1 %}</span></div>
+                                <div class="item"><b>后端文章:</b> <span>{% calculation_category_count 2 %}</span></div>
+                                <div class="item"><b>项目相关:</b> <span>{% calculation_category_count 3 %}</span></div>
+                                <div class="item"><b>网站空间:</b> <span>DigitalOcean</span></div>
+                                <div class="item"><b>订阅内容:</b>
+                                    <div class="images">
+                                        <div class="qq">
+                                            <el-image
+                                                    :preview-src-list="['/static/my/img/footer/qq.png', '/static/my/img/footer/wechat.png']"
+                                                    scroll-container=".el-scrollbar__wrap" lazy
+                                                    src="/static/my/img/footer/qq.png" alt="我的QQ"></el-image>
+                                            我的QQ
+                                        </div>
+                                        <div class="qq">
+                                            <el-image
+                                                    :preview-src-list="['/static/my/img/footer/wechat.png', '/static/my/img/footer/qq.png']"
+                                                    src="/static/my/img/footer/wechat.png" alt="我的微信"
+                                                    scroll-container=".el-scrollbar__wrap" lazy></el-image>
+                                            我的微信
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="feedback card">
+                            <div class="title">
+                                <h2>意见反馈</h2>
+                            </div>
+                            <div class="body">
+                                <el-input
+                                        id="feedback__email"
+                                        placeholder="请输入用于接收反馈的邮箱"
+                                        v-model="feedback.email">
+                                </el-input>
+                                <el-input
+                                        id="feedback__content"
+                                        placeholder="请输入你对网站的建议"
+                                        type="textarea"
+                                        :rows="6"
+                                        resize="none"
+                                        v-model="feedback.content">
+                                </el-input>
+                                <el-button type="primary" @click="feedback_add">确 定</el-button>
+                            </div>
+                        </div>
+                        <div class="links card">
+                            <el-dialog
+                                    title="申请友链"
+                                    :visible.sync="friends_links_dialog"
+                                    width="30%">
+                                <div class="dialog_content">
+                                    <div>
+                                        <label for="site_add__title">网站标题</label>
+                                        <el-input
+                                                id="site_add__title"
+                                                placeholder="请输入你的网站标题"
+                                                v-model="site.title">
+                                        </el-input>
+                                    </div>
+                                    <div>
+                                        <label for="site_add__href">网站链接</label>
+                                        <el-input
+                                                id="site_add__href"
+                                                placeholder="请输入你的网站链接"
+                                                v-model="site.href">
+                                        </el-input>
+                                    </div>
+                                    <div>
+                                        <label for="site_add__abstract">网站描述</label>
+                                        <el-input
+                                                id="site_add__abstract"
+                                                placeholder="请输入你的网站描述"
+                                                type="textarea"
+                                                :rows="4"
+                                                resize="none"
+                                                v-model="site.abstract">
+                                        </el-input>
+                                    </div>
+                                    <div>
+                                        <label for="site_add__abstract">网站图片</label>
+                                        <div class="flex">
+                                            <el-input
+                                                    id="site_add__abstract"
+                                                    placeholder="请输入你的网站图标的在线链接"
+                                                    class="icon_href"
+                                                    v-model="site.icon_href">
+                                            </el-input>
+                                            <div class="icon_img">
+                                                <img :src="site.icon_href" alt="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span slot="footer" class="dialog-footer">
+                            <el-button @click="friends_links_dialog = false">取 消</el-button>
+                            <el-button type="primary" @click="friend_link_add">确 定</el-button>
+                          </span>
+                            </el-dialog>
+                            <div class="title">
+                                <h2>友情链接</h2>
+                                <div>
+                                    <a href="javascript:void (0);" @click="friends_links_dialog=true">申请友链</a>
+                                </div>
+                            </div>
+                            <div class="body">
+                                <ul>
+                                    {% for link in link_list %}
+                                        <li>
+                                            <a href="{{ link.href }}" target="_blank">{{ link.title }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endblock %}
+        </main>
+        <!-- 尾部区域 -->
+        <footer>
+            <div class="left">
+{#                <p class="thank">Thank For</p>#}
+{#                <p class="info">#}
+{#                    <img src="/static/my/img/footer/tencent.png" alt="">#}
+{#                    <span>腾讯云服务器</span>#}
+{#                    <img src="/static/my/img/footer/tencent.png" alt="">#}
+{#                    <span>腾讯云SSL证书</span>#}
+{#                    <img src="/static/my/img/footer/qiniu.png" alt="">#}
+{#                    <span>七牛云存储</span>#}
+{#                </p>#}
+                <p class="version">
+                    <span>version</span>
+                    <span>{{ VERSION }}</span>
+                </p>
+                <p>建站日期：{{ SITE_INFO.date }}</p>
+{#                <p class="beian">#}
+{#                    <img src="/static/my/img/footer/badges.png" alt="">#}
+{#                    <a href="https://beian.miit.gov.cn/">{{ SITE_BEIAN }}</a>#}
+{#                </p>#}
+            </div>
+            <div class="right">
+                <div class="my_info">
+                    <div class="qq" title="我的QQ">
+                        <img class="show_img" src="/static/my/img/footer/qq.png" alt="">
+                        <img class="img" src="/static/my/img/footer/qq_icon.svg" alt="">
+                    </div>
+                    <div class="wechat" title="我的微信">
+                        <img class="show_img" src="/static/my/img/footer/wechat.png" alt="">
+                        <img class="img" src="/static/my/img/footer/wexin_icon.svg" alt="">
+                    </div>
+                    <div title="我的哔哩哔哩">
+                        <a href="https://space.bilibili.com/13197621" target="_blank">
+                            <img class="img" src="/static/my/img/footer/bilibili_icon.svg" alt="">
+                        </a>
+
+                    </div>
+                    <div title="gitee">
+                        <a href="https://git.fediverse.top/" target="_blank">
+                            <img class="img" src="/static/my/img/footer/gitee_icon.svg" alt="">
+                        </a>
+                    </div>
+                    <div title="GitHub">
+                        <a href="https://github.com/Zhang-abab" target="_blank">
+                            <img class="img" src="/static/my/img/footer/github_icon.svg" alt="">
+                        </a>
+                    </div>
+                </div>
+                <p>
+                    <span>联系邮箱：2411358676@qq.com</span>
+                </p>
+            </div>
+        </footer>
+    </el-scrollbar>
+</div>
+<script src="/static/vue/vue.js"></script>
+<script src="/static/jquery/jquery.min.js"></script>
+<!-- 引入组件库 -->
+<script src="/static/elementui/index.js"></script>
+<script src="/static/axios/axios.min.js"></script>
+<script src="/static/my/js/vendor.js"></script>
+<script src="/static/my/js/index.js"></script>
+{% block js %}
+    <script>
+        // 获取需要轮播的div
+        let menu_img = document.querySelectorAll('.dynamic_shuffl')
+
+        let banner = document.getElementById('banner_box')
+        let banner_time = Number(banner.getAttribute('banner_time'))
+        // 获取它的长度
+        let menu_length = menu_img.length
+        // 初始位置
+        let index = 0
+        let timer = null;
+        clearInterval(timer)
+        timer = setInterval(() => {
+            //
+            index++
+            // 到头了
+            if (index === menu_length) {
+                index = 0
+            }
+            // 样式复原操作
+            for (let i of menu_img) {
+                i.style.opacity = 0
+            }
+            menu_img[index].style.opacity = 1
+            if (!banner_time) {
+                clearInterval(timer)
+            }
+
+        }, banner_time * 1000)
+
+
+        let banner_slogan = document.getElementById('banner_slogan')
+        let slogan_list = eval(banner_slogan.getAttribute('lis'))
+        let slogan_time = Number(banner_slogan.getAttribute('slogan_time'))
+
+        let slogan_index = 0;
+        let slogan_timer = null
+        slogan_timer = setInterval(() => {
+            slogan_index++
+            if (slogan_index === slogan_list.length) {
+                slogan_index = 0
+            }
+            if (!slogan_time) {
+                clearInterval(slogan_timer)
+            } else {
+                banner_slogan.innerText = slogan_list[slogan_index]
+            }
+
+        }, slogan_time * 1000)
+
+
+    </script>
+    <script defer src="/static/my/js/get_24_house.js"></script>
+{% endblock %}
+{% block article_js %}
+
+{% endblock %}
+</body>
+</html>
