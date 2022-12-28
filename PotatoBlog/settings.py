@@ -79,14 +79,21 @@ WSGI_APPLICATION = 'PotatoBlog.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'Blog',
+#         'USER': 'root',
+#         'PASSWORD': 'Zhang123',
+#         'HOST': 'db',
+#         'PORT': 3306
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Blog',
-        'USER': 'root',
-        'PASSWORD': 'Zhang123',
-        'HOST': 'db',
-        'PORT': 3306
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'mydatabase',
     }
 }
 # 设置redis缓存。这里密码为redis.conf里设置的密码
