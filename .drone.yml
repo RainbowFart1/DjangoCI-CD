@@ -1,0 +1,12 @@
+kind: pipeline
+type: docker
+steps:
+- name: Django
+  image: python
+  commands:
+    - pip install -r requirements.txt
+    - python manage.py runserver 0.0.0.0:8888
+
+trigger:
+  branch:
+  - master
