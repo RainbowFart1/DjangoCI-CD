@@ -36,10 +36,10 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-#     'django.contrib.staticfiles',
-#     'app01.apps.App01Config',
-#     'api.apps.ApiConfig',
-# ]
+    'django.contrib.staticfiles',
+    'app01.apps.App01Config',
+    'api.apps.ApiConfig',
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
