@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-hy&u3h8i&3#a9y4qvz*^80zak#l-3t1=+%k)hz9u3)#i2dcnu5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-# ALLOWED_HOSTS = ['127.0.0.1','www.zapotato.com']
+ALLOWED_HOSTS = ['127.0.0.1','www.zapotato.com']
 
 # Application definition
 
@@ -36,10 +36,10 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'app01.apps.App01Config',
-    'api.apps.ApiConfig',
-]
+#     'django.contrib.staticfiles',
+#     'app01.apps.App01Config',
+#     'api.apps.ApiConfig',
+# ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
