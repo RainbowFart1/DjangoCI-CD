@@ -1,0 +1,13 @@
+name: TestDjango
+no:
+  push:
+    branches:
+      - master
+jobs:
+  mytest:
+    name: TestDjango
+    runs-on: ubuntu-latest
+    steps:
+      - /usr/local/bin/python -m pip install --upgrade pip
+      - pip install -r requirements.txt
+      - python3 manage.py test
