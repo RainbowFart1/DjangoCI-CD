@@ -34,10 +34,9 @@ jobs:
       run: |
         python manage.py test
 
-    - name: Docker-build-push
-      uses: docker/build-push-action@v2
-      with:
-         context: .
-         push: ${{ GitHub.event_name != 'pull_request' }}
-         tags: ${{ steps.meta.outputs.tags }}
-         labels: ${{ steps.meta.outputs.labels }}
+    - uses: actions/checkout@v3
+    - name: Docker-build
+      run: docker build . --file Dockerfile --tag ranibw12/cdci
+      
+    - name: Docker-push
+      run: docker push ranibw12/cdci
