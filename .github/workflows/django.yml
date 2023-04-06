@@ -16,10 +16,11 @@ jobs:
 
     steps:
     
-    - uses: easingthemes/ssh-deploy@v2.0.7
-    - name: Deploy 
-    
-      env:
-          SSH_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN }}
-          REMOTE_HOST: 47.115.204.166
-      run: ls
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.LIVE_SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_USER_PASSWORD }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          run: ls
