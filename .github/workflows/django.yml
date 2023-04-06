@@ -44,9 +44,9 @@ jobs:
       
     - name: Docker-push
       run: docker push rainbow12/cdci
-
-    - name: Deploy 
+      
     - uses: easingthemes/ssh-deploy@v2.0.7
+    - name: Deploy 
       env:
           SSH_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN }}
       run: ls
