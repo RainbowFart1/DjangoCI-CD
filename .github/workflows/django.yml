@@ -53,6 +53,7 @@ jobs:
         password: ${{ secrets.SERVER_PASSWD }}
         port: ${{ secrets.SERVER_PORT }}
         script: |
+          docker rm -f Test_cdci
           cd /home/
           ls
           docker run -itd -p 1000:8000 --name Test_cdci rainbow12/cdci /bin/bash start.sh
