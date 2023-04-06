@@ -28,7 +28,7 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-  
+
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
@@ -46,7 +46,7 @@ jobs:
       run: docker push rainbow12/cdci
 
     - name: Deploy 🚀 
-    - uses: easingthemes/ssh-deploy@v2.0.7
+      uses: easingthemes/ssh-deploy@v2.0.7
       env:
           SSH_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN }}
       run: ls
