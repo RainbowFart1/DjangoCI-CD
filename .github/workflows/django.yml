@@ -23,4 +23,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWD }}
           port: ${{ secrets.SERVER_PORT }}
-          run: ls
+          script: |
+            cd /home/potato
+            docker run hello-world
